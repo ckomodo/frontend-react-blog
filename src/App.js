@@ -9,31 +9,35 @@ function App() {
     password: "",
   });
 
-
-const [profileState, setProfileState] = useState ({
-  username: "",
+  const [profileState, setProfileState] = useState({
+    username: "",
     email: "",
     Articles: [],
-    isLoggedIn: false
-})
-
-
-useEffect(()=>{
-  const token = localStorage.getItem("token");
-  API.getAdminProfile(token).then(profileInfo => {
-    if(profileInfo){
-
-      setProfileState ({
-        name: profileInfo.username,
-        email: profileInfo.email,
-        articles: profileInfo.Articles,
-        isLoggedIn: true
-      })
-    }
+    isLoggedIn: false,
   });
-}, []) 
 
-
+  //storing token of logged in user in local storage
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    API.getAdminProfile(token).then((profileInfo) => {
+      if (profileInfo) {
+        setProfileState({
+          name: profileInfo.username,
+          email: profileInfo.email,
+          articles: profileInfo.Articles,
+          isLoggedIn: true,
+        });
+      } else {
+        localStorage.removeItem("token");
+        setProfileState({
+          username: "",
+          email: "",
+          Articles: [],
+          isLoggedIn: false,
+        });
+      }
+    });
+  }, []);
 
   //function to handle form input
   const inputChange = (event) => {
@@ -49,21 +53,18 @@ useEffect(()=>{
     event.preventDefault();
     API.login(loginFormState).then((newToken) => {
       //store token from admin log in
-      localStorage.setItem("token", newToken.token)
-      API.getAdminProfile(newToken.token).then(profileInfo => {
+      localStorage.setItem("token", newToken.token);
+      API.getAdminProfile(newToken.token).then((profileInfo) => {
         console.log(profileInfo);
-        setProfileState ({
+        setProfileState({
           name: profileInfo.username,
           email: profileInfo.email,
           articles: profileInfo.Articles,
-          isLoggedIn: true
-        })
+          isLoggedIn: true,
+        });
       });
     });
   };
-
-
-
 
   return (
     <div className="App">
@@ -91,9 +92,11 @@ useEffect(()=>{
         />
         <input type="submit" value="login" />
       </form>
-{profileState.isLoggedIn?profileState.articles.map(articlesObj=><h1>{articlesObj.title}</h1>):<h1>Log in as admin to see profile</h1>}
-
-
+      {profileState.isLoggedIn ? (
+        profileState.articles.map((articlesObj) => <h1>{articlesObj.title}</h1>)
+      ) : (
+        <h1>Log in as admin to see profile</h1>
+      )}
     </div>
   );
 }
